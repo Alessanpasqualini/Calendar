@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 
@@ -33,6 +32,7 @@ class _CalendarPage extends State<StatefulWidget> {
 class _AppBar extends StatelessWidget implements PreferredSizeWidget {
 
   String monthName = DateFormat.MMMM('it').format(selectedDate);
+  String yearName= DateFormat.y().format(selectedDate);
 
   String day = "${DateFormat.EEEE('It').format(selectedDate)} ${selectedDate.day}";
   @override
@@ -42,19 +42,8 @@ class _AppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          TextButton(
-            onPressed: () {
-              final selectedDate = showMonthYearPicker(
-                locale: Locale('it','IT'),
-                initialMonthYearPickerMode: MonthYearPickerMode.month,
-                context: context,
-                initialDate: DateTime.now(), // Today's date
-                firstDate: DateTime(2000, 5), // Stating date : May 2000
-                lastDate: DateTime(2050), // Ending date: Dec 2050
-              );
-            }, child: Text(monthName),
-          ),
-            _Selection(selector: _yPicker(context),),
+          _Selection(selector :MonthPicker(),displayLabel:monthName ,pickerLabel:"Mese"),
+          _Selection(selector: _yPicker(context),pickerLabel: "Anno",displayLabel: yearName,),
             Text(
               day,
               textAlign: TextAlign.end,
@@ -72,12 +61,16 @@ class _AppBar extends StatelessWidget implements PreferredSizeWidget {
 class _Selection extends StatelessWidget  
 {
   Widget selector;
+  String? pickerLabel;
+  String displayLabel;
   _Selection(
     {
       required this.selector,
+      required this.displayLabel,
+      this.pickerLabel,
     }
   );
-  String year= DateFormat.y().format(selectedDate);
+
   @override
   Widget build(BuildContext context)
   {
@@ -87,7 +80,7 @@ class _Selection extends StatelessWidget
     context: context,
     builder: (BuildContext context) {
     return AlertDialog(
-      title: Text("Year"),
+      title: Text(pickerLabel??""),
       content:Container
       (
         width: 300,
@@ -98,7 +91,7 @@ class _Selection extends StatelessWidget
     }
     );
     },
-  child:Text(year),
+  child:Text(displayLabel),
   );
   }
 
@@ -106,7 +99,7 @@ class _Selection extends StatelessWidget
 
 Widget _yPicker(BuildContext context)
 {
-  
+ 
  return YearPicker(
         firstDate: DateTime(DateTime.now().year - 100, 1),
         lastDate: DateTime(DateTime.now().year + 100, 1),
@@ -121,10 +114,80 @@ Widget _yPicker(BuildContext context)
 
 Future mSelection(BuildContext context)
 async {
-        showMonthYearPicker(
+        final date = await showMonthYearPicker(
         context: context,
         initialDate: DateTime.now(),
         firstDate: DateTime(2000),
         lastDate: DateTime(2050),
     );
+    print(date);
+}
+
+class MonthPicker extends StatefulWidget {
+  @override
+  _MonthPickerState createState() => _MonthPickerState();
+}
+
+class _MonthPickerState extends State<MonthPicker> {
+  // Lista dei mesi
+  List<String> months = [
+    'Gennaio',
+    'Febbraio',
+    'Marzo',
+    'Aprile',
+    'Maggio',
+    'Giugno',
+    'Luglio',
+    'Agosto',
+    'Settembre',
+    'Ottobre',
+    'Novembre',
+    'Dicembre'
+  ];
+  // Mese selezionato
+  String selectedMonth = 'Gennaio';
+
+   @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Center(
+        child:Column(
+          children: [
+            const Divider(
+              color: Color.fromARGB(195, 38, 4, 190), // Colore della linea
+              thickness: 1, // Spessore della linea
+              indent: 5, // Margine della linea
+            ),
+            Expanded(
+              child:ListWheelScrollView(
+                itemExtent: 50, // Altezza di ogni elemento
+                diameterRatio: 1.5, // Rapporto tra il diametro della ruota e l'altezza dello schermo
+                magnification: 1.5, // Fattore di ingrandimento dell'elemento centrale
+                useMagnifier: true, // Usa l'effetto di ingrandimento
+                physics: const FixedExtentScrollPhysics(), // Permette di scorrere solo un elemento alla volta
+                children: months.map((String month) {
+                  return Center(
+                    child:
+                        Text(
+                        month,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Color.fromARGB(255, 0, 0, 0),
+                          ),
+                      ),
+                    );
+                }).toList(),
+                onSelectedItemChanged: (int index) {
+                  setState(() {
+                    print(index);
+                  });
+                },
+            ),
+            )
+          ]
+        )
+      ),
+    );
+  }
 }

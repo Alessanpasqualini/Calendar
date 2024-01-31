@@ -39,6 +39,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   month_year_picker: ^0.3.0+1
+  datepicker_dropdown: ^0.0.9
 
 dev_dependencies:
   flutter_test:
