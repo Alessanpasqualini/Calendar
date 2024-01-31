@@ -42,12 +42,8 @@ class _AppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _Selection(selector :MonthPicker(),displayLabel:monthName ,pickerLabel:"Mese"),
-          _Selection(selector: _yPicker(context),pickerLabel: "Anno",displayLabel: yearName,),
-            Text(
-              day,
-              textAlign: TextAlign.end,
-            ),
+          Selection(selector :MonthPicker(),dateFormatLabel:DateFormat.MONTH,pickerLabel:"Mese"),
+          Selection(selector: _yPicker(context),pickerLabel: "Anno",dateFormatLabel: DateFormat.YEAR ,)
         ]
       )
     );
@@ -55,18 +51,35 @@ class _AppBar extends StatelessWidget implements PreferredSizeWidget {
 
   // Implementare il metodo preferredSize per restituire la dimensione desiderata
   @override
-  Size get preferredSize => Size.fromHeight(50.0);
+  Size get preferredSize => const Size.fromHeight(50.0);
 }
+class Selection extends StatefulWidget
+{
 
-class _Selection extends StatelessWidget  
+  Widget selector;
+  String? pickerLabel;
+  String dateFormatLabel;
+  Selection(
+    {
+      super.key, 
+      required this.selector,
+      required this.dateFormatLabel,
+      this.pickerLabel,
+    }
+  );
+
+  @override
+  _SelectionState createState() =>_SelectionState(selector: selector, dateFormatLabel: dateFormatLabel,pickerLabel: pickerLabel);
+}
+class _SelectionState extends State<Selection>  
 {
   Widget selector;
   String? pickerLabel;
-  String displayLabel;
-  _Selection(
+  String dateFormatLabel;
+  _SelectionState(
     {
       required this.selector,
-      required this.displayLabel,
+      required this.dateFormatLabel,
       this.pickerLabel,
     }
   );
@@ -74,6 +87,7 @@ class _Selection extends StatelessWidget
   @override
   Widget build(BuildContext context)
   {
+    String monthName = DateFormat(dateFormatLabel,'it').format(selectedDate);
     return GestureDetector(
     onTap: () async{
     showDialog(
@@ -81,7 +95,7 @@ class _Selection extends StatelessWidget
     builder: (BuildContext context) {
     return AlertDialog(
       title: Text(pickerLabel??""),
-      content:Container
+      content:SizedBox
       (
         width: 300,
         height: 300,
@@ -89,12 +103,16 @@ class _Selection extends StatelessWidget
       )
     );
     }
+    ).then((value) => {
+      setState(
+        () => {})
+      }
     );
     },
-  child:Text(displayLabel),
+  child:Text(monthName),
   );
   }
-
+      
 }
 
 Widget _yPicker(BuildContext context)
@@ -106,6 +124,8 @@ Widget _yPicker(BuildContext context)
         selectedDate: selectedDate,
         onChanged: (DateTime dateTime)
           {
+            selectedDate = DateTime(dateTime.year,selectedDate.month,selectedDate.day);
+            
           // close the dialog when year is selected.
           Navigator.pop(context);           
           }     
@@ -120,7 +140,6 @@ async {
         firstDate: DateTime(2000),
         lastDate: DateTime(2050),
     );
-    print(date);
 }
 
 class MonthPicker extends StatefulWidget {
@@ -180,7 +199,7 @@ class _MonthPickerState extends State<MonthPicker> {
                 }).toList(),
                 onSelectedItemChanged: (int index) {
                   setState(() {
-                    print(index);
+                    selectedDate = DateTime(selectedDate.year,index+1,selectedDate.day);
                   });
                 },
             ),
