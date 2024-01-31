@@ -29,6 +29,7 @@ class _CalendarPage extends State<StatefulWidget> {
 }
 
 // Estendere PreferredSizeWidget per indicare la dimensione preferita dell'appBar
+// ignore: must_be_immutable
 class _AppBar extends StatelessWidget implements PreferredSizeWidget {
 
   String monthName = DateFormat.MMMM('it').format(selectedDate);
@@ -53,6 +54,8 @@ class _AppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(50.0);
 }
+
+// ignore: must_be_immutable
 class Selection extends StatefulWidget
 {
 
@@ -69,6 +72,7 @@ class Selection extends StatefulWidget
   );
 
   @override
+  // ignore: library_private_types_in_public_api, no_logic_in_create_state
   _SelectionState createState() =>_SelectionState(selector: selector, dateFormatLabel: dateFormatLabel,pickerLabel: pickerLabel);
 }
 class _SelectionState extends State<Selection>  
@@ -134,6 +138,7 @@ Widget _yPicker(BuildContext context)
 
 Future mSelection(BuildContext context)
 async {
+        // ignore: unused_local_variable
         final date = await showMonthYearPicker(
         context: context,
         initialDate: DateTime.now(),
@@ -142,12 +147,7 @@ async {
     );
 }
 
-class MonthPicker extends StatefulWidget {
-  @override
-  _MonthPickerState createState() => _MonthPickerState();
-}
-
-class _MonthPickerState extends State<MonthPicker> {
+class MonthPicker extends StatelessWidget{
   // Lista dei mesi
   List<String> months = [
     'Gennaio',
@@ -165,6 +165,8 @@ class _MonthPickerState extends State<MonthPicker> {
   ];
   // Mese selezionato
   String selectedMonth = 'Gennaio';
+
+  MonthPicker({super.key});
 
    @override
   Widget build(BuildContext context) {
@@ -198,9 +200,7 @@ class _MonthPickerState extends State<MonthPicker> {
                     );
                 }).toList(),
                 onSelectedItemChanged: (int index) {
-                  setState(() {
                     selectedDate = DateTime(selectedDate.year,index+1,selectedDate.day);
-                  });
                 },
             ),
             )
