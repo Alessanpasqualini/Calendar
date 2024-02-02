@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/Calendar.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 
 void main() {
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
       ],
       title: 'Flutter Demo',
       theme: ThemeData(
+        fontFamily: GoogleFonts.varela().fontFamily,
         // This is the theme of your application.
         //
         // TRY THIS: Try running your application with "flutter run". You'll see

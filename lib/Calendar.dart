@@ -1,8 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 
+
 DateTime selectedDate = DateTime.now();
+
+final List<StreamController<int>> _streamControllers =
+      List.generate(42, (_) => StreamController<int>());
+int count =0;
+
+final StreamController<bool> _CalendarPageStreamController = StreamController<bool>();
 
 class Calendar extends StatefulWidget{
 
@@ -19,14 +28,23 @@ class _CalendarPage extends State<StatefulWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _AppBar(),
-      body: const Column(
+      body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
-        children:[
-        ]
+        children: [
+          StreamBuilder<bool>(stream: _CalendarPageStreamController.stream,
+          builder: (context, snapshot)
+          {
+             return CalendarBody();
+          }
+          ),
+        ],
       )
     );
   }
 }
+  void _updateWidget(int index,int value) {
+    _streamControllers.elementAt(index).sink.add(value);
+  }
 
 // Estendere PreferredSizeWidget per indicare la dimensione preferita dell'appBar
 // ignore: must_be_immutable
@@ -109,7 +127,7 @@ class _SelectionState extends State<Selection>
     }
     ).then((value) => {
       setState(
-        () => {})
+        () => _CalendarPageStreamController.sink.add(true))
       }
     );
     },
@@ -209,4 +227,125 @@ class MonthPicker extends StatelessWidget{
       ),
     );
   }
+}
+
+class CalendarBody extends StatefulWidget 
+{
+
+  CalendarBody({super.key});
+  
+  @override
+  State<StatefulWidget> createState()=>_calendarBody();
+}
+
+class _calendarBody extends State<CalendarBody>
+{
+
+
+  @override
+  Widget build(BuildContext context) {
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize:MainAxisSize.max,
+      children: _generateCalendarBody()
+    );
+  }
+
+} 
+
+
+class CalendarDay extends StatefulWidget
+{
+
+  @override
+  State<StatefulWidget> createState()=> _CalendarDayState( controllerIndex: controllerIndex , bgColor: bgColor);
+  int controllerIndex;
+  final Color? bgColor;
+  CalendarDay({
+    super.key,
+    required this.controllerIndex,
+    this.bgColor =Colors.red
+  });
+  
+  getDay() {}
+}
+class _CalendarDayState extends State<CalendarDay>  
+{
+    int controllerIndex;
+    Color? bgColor = Colors.red;
+    _CalendarDayState(
+      {
+        required this.controllerIndex,
+        this.bgColor
+      }
+    );
+  int getDay() => _day;
+  int _day =0;
+  @override
+  void initState() {
+    super.initState();
+    _streamControllers.elementAt(controllerIndex).stream.listen((day) {
+      setState(() {
+        _day = day;
+
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+      return Container(
+      width: MediaQuery.of(context).size.width /7, // larghezza del 33% dello schermo
+      height: MediaQuery.of(context).size.height /10, // larghezza del 33% dello schermo
+      margin: const EdgeInsets.symmetric(vertical: 0,horizontal: 0),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: bgColor,
+        border: Border.all(color: Colors.blueAccent),
+      ),
+      child: Text(_day>0? _day.toString(): "")
+    );
+    }
+  }
+
+List<Widget> _generateCalendarBody()
+{
+  List<Widget> bodyCalendar = <Widget>[]; // Questo è giusto
+  int index = 0;
+  Set<String> dayOfWeek = <String>
+  {
+    "Lun",
+    "Mar",
+    "Mer",
+    "Gio",
+    "Ven",
+    "Sab",
+    "Dom"
+  };
+  int dayone = DateTime(selectedDate.year,selectedDate.month).weekday -2;
+
+  int maxday = DateTime(selectedDate.year,selectedDate.month+1,0).day;
+  for(var x = 0;x<7;x++)
+  {
+      bodyCalendar.add(Column(
+          children:[
+            Text(dayOfWeek.elementAt(x)),
+            CalendarDay(controllerIndex: index,),
+            CalendarDay(controllerIndex: index+1,),
+            CalendarDay(controllerIndex: index+2,),
+            CalendarDay(controllerIndex: index+3,),
+            CalendarDay(controllerIndex: index+4,),
+            CalendarDay(controllerIndex: index+5),
+          ]
+        ),);
+        _updateWidget(index,(((7*0)+x-dayone)<=0 || ((7*0)+x-dayone)>maxday)?0:((7*0)+x-dayone));
+        _updateWidget(index+1,(((7*1)+x-dayone)<=0 || ((7*1)+x-dayone)>maxday)?0:((7*1)+x-dayone));
+        _updateWidget(index+2,(((7*2)+x-dayone)<=0 || ((7*2)+x-dayone)>maxday)?0:((7*2)+x-dayone));
+        _updateWidget(index+3,(((7*3)+x-dayone)<=0 || ((7*3)+x-dayone)>maxday)?0:((7*3)+x-dayone));
+        _updateWidget(index+4,(((7*4)+x-dayone)<=0 || ((7*4)+x-dayone)>maxday)?((7*4)+x-dayone-maxday):((7*4)+x-dayone));
+        _updateWidget(index+5,(((7*5)+x-dayone)<=0 || ((7*5)+x-dayone)>maxday)?((7*5)+x-dayone-maxday):((7*5)+x-dayone));
+        index = index+6;
+    }  
+  return bodyCalendar;
 }
