@@ -54,14 +54,24 @@ class _AppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor:  const Color.fromARGB(255,66,66,66),
+      backgroundColor: const Color.fromARGB(255,66,66,66),
       // Personalizzare l'aspetto della barra delle applicazioni qui
-      title: Row(
+      title:
+      Column(
+        children: [
+       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Selection(selector :MonthPicker(),dateFormatLabel:DateFormat.MONTH,pickerLabel:"Mese"),
           Selection(selector: _yPicker(context),pickerLabel: "Anno",dateFormatLabel: DateFormat.YEAR ,)
         ]
+      ),
+                  const Divider(
+              color: Color.fromARGB(255, 227 , 227, 227), // Colore della linea
+              thickness: 1, // Spessore della linea
+              indent: 5, // Margine della linea
+            ),
+        ],
       )
     );
   }
@@ -165,7 +175,7 @@ async {
 
 class MonthPicker extends StatelessWidget{
   // Lista dei mesi
-  List<String> months = [
+  final List<String> months = [
     'Gennaio',
     'Febbraio',
     'Marzo',
@@ -179,8 +189,6 @@ class MonthPicker extends StatelessWidget{
     'Novembre',
     'Dicembre'
   ];
-  // Mese selezionato
-  String selectedMonth = 'Gennaio';
 
   MonthPicker({super.key});
 
@@ -259,7 +267,13 @@ class _calendarBody extends State<CalendarBody>
 List<Widget> _generateCalendarBody(BuildContext context)
 {
   List<Widget> bodyCalendar = <Widget>[];
-  Color bgColor =const Color.fromARGB(118, 227, 227, 227);
+  Color standardBgColor =const Color.fromARGB(118, 227, 227, 227);
+  Color weekendColor = Color.fromARGB(37, 247, 0, 0); 
+  Color todayColor = Color.fromARGB(134, 234, 238, 6); 
+  Color contColor = standardBgColor;
+  
+  DateTime today = DateTime.now();
+
   Set<String> dayOfWeek = <String>
   {
     "Lun",
@@ -273,7 +287,6 @@ List<Widget> _generateCalendarBody(BuildContext context)
   int dayone = DateTime(selectedDate.year,selectedDate.month).weekday -2;
 
   int maxday = DateTime(selectedDate.year,selectedDate.month+1,0).day;
-
   for(var x = 0;x<7;x++)
   {
       List<Widget> calendarRow = <Widget>[]; // Questo è giusto
@@ -285,21 +298,31 @@ List<Widget> _generateCalendarBody(BuildContext context)
     {
 
       int giorno = 6*j+j-dayone+x;
+
+      if (giorno == selectedDate.day+1 && selectedDate.month == today.month && selectedDate.year == today.year ) contColor = todayColor;
+      else 
+      {
+        if (giorno > maxday) contColor = Color.fromARGB(30, contColor.red, contColor.green, contColor.blue);
+        else if(x == 6) contColor = weekendColor;
+      else contColor = standardBgColor;
+      }
+
+      giorno>maxday?giorno-=maxday:giorno;
       calendarRow.add(
         Container(
-              width: MediaQuery.of(context).size.width /7, // larghezza del 33% dello schermo
-              height: MediaQuery.of(context).size.height /10, // larghezza del 33% dello schermo
+              width: MediaQuery.of(context).size.width /7,
+              height: MediaQuery.of(context).size.height /6.9,
               margin: const EdgeInsets.symmetric(vertical: 0,horizontal: 0),
-              alignment: Alignment.center,
+              alignment: Alignment.topLeft,
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.all(Radius.circular(5)),
                 shape:BoxShape.rectangle,
                 border: Border.all(
-                  color: const Color.fromARGB(255,17,17,17),
+                  color:  const Color.fromARGB(255,17,17,17),
                   ),
-                color: bgColor,
+                color: contColor
               ),
-              child: Text((giorno>0 && giorno<=maxday )?giorno.toString():"" )
+              child: Text(giorno>0?giorno.toString():"" )
             )
         );
     }
