@@ -303,7 +303,7 @@ List<Widget> _generateCalendarBody(BuildContext context)
 
       int giorno = 6*j+j-dayone+x;
 
-      if (giorno == selectedDate.day+1 && selectedDate.month == today.month && selectedDate.year == today.year ) contColor = todayColor;
+      if (giorno == selectedDate.day && selectedDate.month == today.month && selectedDate.year == today.year ) contColor = todayColor;
       else 
       {
         if (giorno > maxday) {contColor = Color.fromARGB(30, contColor.red, contColor.green, contColor.blue);}
@@ -407,7 +407,7 @@ class _SingleDayCalendarPage extends State<StatefulWidget>  {
           MaterialButton(
             onPressed: (){
 
-            context.read<NoteDB>().addNote(textController.text, selectedDate);
+           // context.read<NoteDB>().addNote(textController.text, selectedDate);
             Navigator.pop(context);
 
             },

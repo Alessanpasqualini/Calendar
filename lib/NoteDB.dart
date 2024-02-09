@@ -5,34 +5,41 @@ import 'package:path_provider/path_provider.dart';
 
 class NoteDB extends ChangeNotifier{
 
-  static late Isar isar;
+  static late final Isar isar;
 
   static Future<void> initialize() async 
   {
     final dir = await getApplicationDocumentsDirectory();
+    if (isar!= null && isar.isOpen) return;
     isar = await Isar.open(
       [NoteSchema], 
-      directory: dir.path
-      // ignore: avoid_print
+      directory: dir.path,
+      inspector: true,
       );
+      if (isar.isOpen)
+      {
+        print(isar.directory.toString());
+      }
   }
 
   final List<Note> currentNotes = [];
 //Write
   Future<void> addNote(String textFromUser,DateTime date) async
   {
-    final newNote = Note()..text = textFromUser;
-    newNote..date = date;
+    final newNote = Note();
+      newNote..text = textFromUser;
+      //..date = date; // assegno il valore del parametro date al campo date del nuovo oggetto Note
 
     await isar.writeTxn(() => isar.notes.put(newNote));
   }
 
+  
   // READ
-  Future<void> fetchNote() async
+  Future<void> fetchNotes() async
   {
-    List<Note> fetchNotes = await isar.notes.where().findAll();
+    List<Note> fetchedNotes = await isar.notes.where().findAll();
     currentNotes.clear();
-    currentNotes.addAll(fetchNotes);
+    currentNotes.addAll(fetchedNotes);
     notifyListeners();
   }
 
@@ -50,6 +57,6 @@ class NoteDB extends ChangeNotifier{
       final existingNote = await isar.notes.get(id);
       if(existingNote==null) return;
       await isar.writeTxn(() => isar.notes.delete(id));
-      await fetchNote();
+      await fetchNotes();
   }
 }

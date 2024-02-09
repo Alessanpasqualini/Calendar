@@ -6,6 +6,6 @@ class Note{
 
   Id id = Isar.autoIncrement;
   late String text;
-  late DateTime date;
+  //late DateTime date;
 
 }

@@ -7,43 +7,27 @@ class SingleDayCalendar2 extends StatefulWidget{
 
   const SingleDayCalendar2({ super.key });
   @override
-  State createState() => _SingleDayCalendarPage();
+  State<SingleDayCalendar2> createState() => _SingleDayCalendarState();
 
 
 }
 
-class _SingleDayCalendarPage extends State<SingleDayCalendar2>  {
+class _SingleDayCalendarState extends State<SingleDayCalendar2>  {
 
   final textController = TextEditingController();
 
 
   @override
   Widget build(BuildContext context) {
-    //final noteDB = context.watch<NoteDB>();
-
+        //final NodeDB = NoteDB.initialize();
+    //final noteDB = context.read<NoteDB>();
     //List<Note> currentNotes = noteDB.currentNotes;
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255,66,66,66),
-      appBar: AppBar(
-        title: Text("w"), 
-        ),
-      floatingActionButton: 
-      FloatingActionButton(
-        onPressed: createNotes,
-        child: const Icon(Icons.add)
-      ),
-      body:  ListView.builder(
-        itemCount:1,
-        itemBuilder: (context,index)
-        {
-          final note = "currentNotes[index];";
-          return ListTile(
-            title: Text(note),
-          );
-        }, 
-      ),
-    );
+     return   Scaffold(
+
+     );
   }
+  
+
   
   @override
   void initState()
@@ -64,7 +48,7 @@ class _SingleDayCalendarPage extends State<SingleDayCalendar2>  {
           MaterialButton(
             onPressed: (){
 
-           // context.read<NoteDB>().addNote(textController.text, DateTime.now());
+            context.read<NoteDB>().addNote(textController.text, DateTime.now());
             Navigator.pop(context);
 
             },
@@ -77,6 +61,6 @@ class _SingleDayCalendarPage extends State<SingleDayCalendar2>  {
   
   void readNotes()
   {
-    context.watch<NoteDB>().fetchNote();
+    //context.watch<NoteDB>().fetchNotes();
   }
 }
