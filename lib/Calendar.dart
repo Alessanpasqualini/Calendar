@@ -122,7 +122,6 @@ class _SelectionState extends State<Selection>
   {
     String monthName = DateFormat(dateFormatLabel,'it').format(currentDate);
     monthName = monthName.replaceFirst(monthName[0],monthName[0].toUpperCase());
-    print(monthName);
     return GestureDetector(
     onTap: () async{
     showDialog(
@@ -251,34 +250,53 @@ class CalendarBody extends StatefulWidget
 
 class _calendarBody extends State<CalendarBody>
 {
+  
+   @override
+  void initState()
+  {
+    super.initState();
+    initDb();
+  }
 
-
+  void initDb()
+  {
+    context.read<NoteDataBase>().updateDayWithNotes(selectedDate);
+  }
 
   @override
   Widget build(BuildContext context) {
-    
+  
+    context.read<NoteDataBase>().updateDayWithNotes(selectedDate);
+
+    NoteDataBase noteDB =  context.watch<NoteDataBase>();
+
+    List<int> dayWithNote = [];
+  
+    dayWithNote= noteDB.dayWithNote;
+
   return StreamBuilder<bool>(stream: _CalendarPageStreamController2.stream,
    builder: (context, snapshot)
           {
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               mainAxisSize:MainAxisSize.max,
-              children: _generateCalendarBody(context)
+              children: _generateCalendarBody(context,dayWithNote)
             );
           }
      );
   }
 } 
-List<Widget> _generateCalendarBody(BuildContext context)
+
+List<Widget> _generateCalendarBody(BuildContext context , List<int> dayWithNote) 
 {
+
   List<Widget> bodyCalendar = <Widget>[];
   Color standardBgColor =const Color.fromARGB(118, 227, 227, 227);
-  Color weekendColor = Color.fromARGB(37, 247, 0, 0); 
-  Color todayColor = Color.fromARGB(134, 234, 238, 6); 
+  Color weekendColor = const Color.fromARGB(37, 247, 0, 0); 
+  Color todayColor = const Color.fromARGB(134, 234, 238, 6); 
   Color contColor = standardBgColor;
 
-  final noteDB = context.watch<NoteDataBase>();
-  
+
   DateTime today = DateTime.now();
 
   Set<String> dayOfWeek = <String>
@@ -294,6 +312,9 @@ List<Widget> _generateCalendarBody(BuildContext context)
   int dayone = DateTime(currentDate.year,currentDate.month).weekday -2;
 
   int maxday = DateTime(currentDate.year,currentDate.month+1,0).day;
+  
+
+
   for(var x = 0;x<7;x++)
   {
       List<Widget> calendarRow = <Widget>[]; // Questo è giusto
@@ -315,9 +336,13 @@ List<Widget> _generateCalendarBody(BuildContext context)
       else {contColor = standardBgColor;}
       }
 
+      giorno>maxday?giorno-=maxday:giorno;
       cellText.add(Text(giorno>0?giorno.toString():""));
 
-      giorno>maxday?giorno-=maxday:giorno;
+      if(dayWithNote.contains(giorno))
+      {
+        cellText.add(Text("QUA"));
+      }
       calendarRow.add(
         GestureDetector(
           child: Container(
@@ -454,7 +479,7 @@ class _SingleDayCalendarPage extends State<StatefulWidget>  {
       context:context ,
        builder: (context)=> 
        AlertDialog(
-        title: Text("Modifica la nota"),
+        title: const Text("Modifica la nota"),
         content: TextField(controller: textController),
         actions: [
           MaterialButton(

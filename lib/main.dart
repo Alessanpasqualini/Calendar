@@ -13,7 +13,7 @@ import 'package:provider/provider.dart';
 void main() async{
   
   WidgetsFlutterBinding.ensureInitialized();
-  NoteDataBase.initialize();
+  await NoteDataBase.initialize();
   runApp(
     ChangeNotifierProvider(
       create: (context) => NoteDataBase(),

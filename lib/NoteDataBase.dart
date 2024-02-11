@@ -7,7 +7,8 @@ import 'package:path_provider/path_provider.dart';
 class NoteDataBase extends ChangeNotifier{
 
   static late final Isar isar;
-
+  final List<Note> currentNotes = [];
+  final List<int> dayWithNote = [];
 
   static Future<void> initialize() async 
   {
@@ -15,18 +16,15 @@ class NoteDataBase extends ChangeNotifier{
     isar = await Isar.open(
       [NoteSchema], 
       directory: dir.path,
-      inspector: true,
       );
-
   }
 
-  final List<Note> currentNotes = [];
 //Write
   Future<void> addNote(String textFromUser,DateTime date) async
   {
     final newNote = Note();
-      newNote..text = textFromUser;
-      newNote..date = date;
+      newNote.text = textFromUser;
+      newNote.date = date;
 
     await isar.writeTxn(() => isar.notes.put(newNote));
     await fetchNotes(date);
@@ -65,5 +63,21 @@ class NoteDataBase extends ChangeNotifier{
   Future<void> haveNote(DateTime date) async
   {
     Note? first = await isar.notes.filter().dateEqualTo(date).findFirst();
+  }
+
+  Future<void> updateDayWithNotes(DateTime date) async
+  {
+
+    dayWithNote.clear();
+    for(int i = 0 ;i< DateTime(date.year,date.month+1,0).day;i++)
+    {
+        List<Note> findNotes = await isar.notes.filter().dateEqualTo(DateTime(date.year,date.month,i)).findAll();
+      if(findNotes.isNotEmpty)
+      {
+        dayWithNote.add(i);
+      }
+    }
+ 
+    notifyListeners();
   }
 }
