@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/Note.dart';
-import 'package:flutter_application_2/NoteDB.dart';
+import 'package:flutter_application_2/NoteDataBase.dart';
 import 'package:intl/intl.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:provider/provider.dart';
 
 
+DateTime currentDate = DateTime.now();
 DateTime selectedDate = DateTime.now();
 
 final StreamController<bool> _CalendarPageStreamController = StreamController<bool>();
@@ -50,9 +51,9 @@ class _CalendarPage extends State<StatefulWidget> {
 // ignore: must_be_immutable
 class _AppBar extends StatelessWidget implements PreferredSizeWidget {
 
-  String yearName= DateFormat.y().format(selectedDate);
+  String yearName= DateFormat.y().format(currentDate);
 
-  String day = "${DateFormat.EEEE('It').format(selectedDate)} ${selectedDate.day}";
+  String day = "${DateFormat.EEEE('It').format(currentDate)} ${currentDate.day}";
   @override
   Widget build(BuildContext context) {
     return AppBar(
@@ -119,7 +120,7 @@ class _SelectionState extends State<Selection>
   @override
   Widget build(BuildContext context)
   {
-    String monthName = DateFormat(dateFormatLabel,'it').format(selectedDate);
+    String monthName = DateFormat(dateFormatLabel,'it').format(currentDate);
     monthName = monthName.replaceFirst(monthName[0],monthName[0].toUpperCase());
     print(monthName);
     return GestureDetector(
@@ -155,10 +156,10 @@ Widget _yPicker(BuildContext context)
  return YearPicker(
         firstDate: DateTime(DateTime.now().year - 100, 1),
         lastDate: DateTime(DateTime.now().year + 100, 1),
-        selectedDate: selectedDate,
+        selectedDate: currentDate,
         onChanged: (DateTime dateTime)
           {
-            selectedDate = DateTime(dateTime.year,selectedDate.month,selectedDate.day);
+            currentDate = DateTime(dateTime.year,currentDate.month,currentDate.day);
             
           // close the dialog when year is selected.
           Navigator.pop(context);           
@@ -228,7 +229,7 @@ class MonthPicker extends StatelessWidget{
                     );
                 }).toList(),
                 onSelectedItemChanged: (int index) {
-                    selectedDate = DateTime(selectedDate.year,index+1,selectedDate.day);
+                    currentDate = DateTime(currentDate.year,index+1,currentDate.day);
                 },
             ),
             )
@@ -275,6 +276,8 @@ List<Widget> _generateCalendarBody(BuildContext context)
   Color weekendColor = Color.fromARGB(37, 247, 0, 0); 
   Color todayColor = Color.fromARGB(134, 234, 238, 6); 
   Color contColor = standardBgColor;
+
+  final noteDB = context.watch<NoteDataBase>();
   
   DateTime today = DateTime.now();
 
@@ -288,9 +291,9 @@ List<Widget> _generateCalendarBody(BuildContext context)
     "Sab",
     "Dom"
   };
-  int dayone = DateTime(selectedDate.year,selectedDate.month).weekday -2;
+  int dayone = DateTime(currentDate.year,currentDate.month).weekday -2;
 
-  int maxday = DateTime(selectedDate.year,selectedDate.month+1,0).day;
+  int maxday = DateTime(currentDate.year,currentDate.month+1,0).day;
   for(var x = 0;x<7;x++)
   {
       List<Widget> calendarRow = <Widget>[]; // Questo è giusto
@@ -300,16 +303,19 @@ List<Widget> _generateCalendarBody(BuildContext context)
 
     for (var j = 0;j<6;j++)
     {
+      List<Widget> cellText = <Widget>[];
 
       int giorno = 6*j+j-dayone+x;
 
-      if (giorno == selectedDate.day && selectedDate.month == today.month && selectedDate.year == today.year ) contColor = todayColor;
+      if (giorno == currentDate.day && currentDate.month == today.month && currentDate.year == today.year ) contColor = todayColor;
       else 
       {
         if (giorno > maxday) {contColor = Color.fromARGB(30, contColor.red, contColor.green, contColor.blue);}
            else if(x == 6) {contColor = weekendColor;}
       else {contColor = standardBgColor;}
       }
+
+      cellText.add(Text(giorno>0?giorno.toString():""));
 
       giorno>maxday?giorno-=maxday:giorno;
       calendarRow.add(
@@ -327,7 +333,9 @@ List<Widget> _generateCalendarBody(BuildContext context)
                   ),
                 color: contColor
               ),
-              child: Text(giorno>0?giorno.toString():"" )
+              child: Row(
+                children: cellText,
+                )
             ),
             onTap:(){
               selectedDate = DateTime(selectedDate.year,selectedDate.month,giorno);
@@ -362,9 +370,9 @@ class _SingleDayCalendarPage extends State<StatefulWidget>  {
 
   @override
   Widget build(BuildContext context) {
-  //  final noteDB = context.watch<NoteDB>();
+    final noteDB = context.watch<NoteDataBase>();
 
-    //List<Note> currentNotes = noteDB.currentNotes;
+    List<Note> currentNotes = noteDB.currentNotes;
     return Scaffold(
       backgroundColor: const Color.fromARGB(255,66,66,66),
       appBar: AppBar(
@@ -376,12 +384,26 @@ class _SingleDayCalendarPage extends State<StatefulWidget>  {
         child: const Icon(Icons.add)
       ),
       body:  ListView.builder(
-        itemCount: 1,
+        itemCount: currentNotes.length,
         itemBuilder: (context,index)
         {
-          final note = "Prova";
           return ListTile(
-            title: Text(note),
+            title: Text(currentNotes[index].text),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                
+                IconButton(
+                  onPressed: () => updateNote(currentNotes[index]) , 
+                  icon: const Icon(Icons.edit)
+                  ),
+
+                IconButton(
+                  onPressed: () => deleteNotes(currentNotes[index]) , 
+                  icon: const Icon(Icons.delete)
+                  )
+              ],
+            ),
           );
         }, 
       ),
@@ -407,11 +429,13 @@ class _SingleDayCalendarPage extends State<StatefulWidget>  {
           MaterialButton(
             onPressed: (){
 
-           // context.read<NoteDB>().addNote(textController.text, selectedDate);
+            context.read<NoteDataBase>().addNote(textController.text, selectedDate);
+
+            textController.clear();
             Navigator.pop(context);
 
             },
-            child: const Text("Creata"),
+            child: const Text("Crea"),
           )
         ],
       ),
@@ -420,8 +444,35 @@ class _SingleDayCalendarPage extends State<StatefulWidget>  {
   
   void readNotes()
   {
-    //context.read<NoteDB>().fetchNote();
+    context.read<NoteDataBase>().fetchNotes(selectedDate);
   }
 
+  void updateNote(Note note)
+  {
+    textController.text = note.text;
+    showDialog(
+      context:context ,
+       builder: (context)=> 
+       AlertDialog(
+        title: Text("Modifica la nota"),
+        content: TextField(controller: textController),
+        actions: [
+          MaterialButton(
+            onPressed:() {
+              context.read<NoteDataBase>().updateNotes(note,textController.text);
+              textController.clear();
+              Navigator.pop(context);
+              },
+              child:const Text("Modifica")
+            ),
+        ],
+      ),
+    );
+  }
+
+  void deleteNotes(Note note)
+  {
+    context.read<NoteDataBase>().deleteNotes(note);
+  }
 }
 

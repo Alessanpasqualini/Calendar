@@ -1,25 +1,23 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/Note.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
-class NoteDB extends ChangeNotifier{
+class NoteDataBase extends ChangeNotifier{
 
   static late final Isar isar;
+
 
   static Future<void> initialize() async 
   {
     final dir = await getApplicationDocumentsDirectory();
-    if (isar!= null && isar.isOpen) return;
     isar = await Isar.open(
       [NoteSchema], 
       directory: dir.path,
       inspector: true,
       );
-      if (isar.isOpen)
-      {
-        print(isar.directory.toString());
-      }
+
   }
 
   final List<Note> currentNotes = [];
@@ -28,35 +26,44 @@ class NoteDB extends ChangeNotifier{
   {
     final newNote = Note();
       newNote..text = textFromUser;
-      //..date = date; // assegno il valore del parametro date al campo date del nuovo oggetto Note
+      newNote..date = date;
 
     await isar.writeTxn(() => isar.notes.put(newNote));
+    await fetchNotes(date);
+
   }
 
   
   // READ
-  Future<void> fetchNotes() async
+  Future<void> fetchNotes(DateTime date) async
   {
-    List<Note> fetchedNotes = await isar.notes.where().findAll();
+    List<Note> fetchedNotes = await isar.notes.filter().dateEqualTo(date).findAll();
     currentNotes.clear();
     currentNotes.addAll(fetchedNotes);
     notifyListeners();
   }
 
-  Future<void> updateNotes(int id,String newText) async
+  Future<void> updateNotes(Note note,String newText) async
   {
-    final existingNote = await isar.notes.get(id);
+    final existingNote = await isar.notes.get(note.id);
     if(existingNote==null) return;
 
     existingNote.text = newText;
     await isar.writeTxn(() => isar.notes.put(existingNote));
+    await fetchNotes(note.date);
+
   }
 
-  Future<void> deleteNotes(int id) async
+  Future<void> deleteNotes(Note note) async
   {
-      final existingNote = await isar.notes.get(id);
+      final existingNote = await isar.notes.get(note.id);
       if(existingNote==null) return;
-      await isar.writeTxn(() => isar.notes.delete(id));
-      await fetchNotes();
+      await isar.writeTxn(() => isar.notes.delete(note.id));
+      await fetchNotes(note.date);
+  }
+
+  Future<void> haveNote(DateTime date) async
+  {
+    Note? first = await isar.notes.filter().dateEqualTo(date).findFirst();
   }
 }

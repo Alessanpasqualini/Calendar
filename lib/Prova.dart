@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/Note.dart';
-import 'package:flutter_application_2/NoteDB.dart';
+import 'package:flutter_application_2/NoteDataBase.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:isar/isar.dart';
+
 
 class SingleDayCalendar2 extends StatefulWidget{
 
-  const SingleDayCalendar2({ super.key });
+  // Aggiungi il parametro noteDB
+  const SingleDayCalendar2({ super.key, required this.noteDB });
+  // Usa il parametro noteDB per accedere al provider
+  final NoteDataBase noteDB;
   @override
   State<SingleDayCalendar2> createState() => _SingleDayCalendarState();
 
 
 }
+
 
 class _SingleDayCalendarState extends State<SingleDayCalendar2>  {
 
@@ -18,17 +25,31 @@ class _SingleDayCalendarState extends State<SingleDayCalendar2>  {
 
 
   @override
-  Widget build(BuildContext context) {
-        //final NodeDB = NoteDB.initialize();
-    //final noteDB = context.read<NoteDB>();
-    //List<Note> currentNotes = noteDB.currentNotes;
-     return   Scaffold(
-
-     );
+  Widget build( context) {
+    // Usa widget.noteDB per accedere al provider
+    List<Note> currentNotes = widget.noteDB.currentNotes;
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(255,66,66,66),
+      appBar: AppBar(
+        title: Text("TITOLO"), 
+        ),
+      floatingActionButton: 
+      FloatingActionButton(
+        onPressed: createNotes,
+        child: const Icon(Icons.add)
+      ),
+      body:  ListView.builder(
+        itemCount: currentNotes.length,
+        itemBuilder: (context,index)
+        {
+          return ListTile(
+            title: Text(currentNotes[index].text),
+          );
+        }, 
+      ),
+    );
   }
-  
 
-  
   @override
   void initState()
   {
@@ -48,7 +69,8 @@ class _SingleDayCalendarState extends State<SingleDayCalendar2>  {
           MaterialButton(
             onPressed: (){
 
-            context.read<NoteDB>().addNote(textController.text, DateTime.now());
+            // Usa widget.noteDB per accedere al provider
+            widget.noteDB.addNote(textController.text, DateTime.now());
             Navigator.pop(context);
 
             },
@@ -61,6 +83,8 @@ class _SingleDayCalendarState extends State<SingleDayCalendar2>  {
   
   void readNotes()
   {
-    //context.watch<NoteDB>().fetchNotes();
+    // Usa widget.noteDB per accedere al provider
+    widget.noteDB.fetchNotes();
   }
+
 }
