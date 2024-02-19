@@ -5,6 +5,7 @@ import 'package:flutter_application_2/NoteDataBase.dart';
 import 'package:intl/intl.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:lottie/lottie.dart';
 
 
 DateTime currentDate = DateTime.now();
@@ -255,46 +256,45 @@ class _calendarBody extends State<CalendarBody>
   void initState()
   {
     super.initState();
-    initDb();
-  }
-
-  void initDb()
-  {
-    context.read<NoteDataBase>().updateDayWithNotes(selectedDate);
   }
 
   @override
   Widget build(BuildContext context) {
   
-    context.read<NoteDataBase>().updateDayWithNotes(selectedDate);
-
-    NoteDataBase noteDB =  context.watch<NoteDataBase>();
-
-    List<int> dayWithNote = [];
-  
-    dayWithNote= noteDB.dayWithNote;
-
   return StreamBuilder<bool>(stream: _CalendarPageStreamController2.stream,
-   builder: (context, snapshot)
+   builder: 
+   (context, snapshot)
           {
+            return FutureBuilder(
+            future: _generateCalendarBody(context),
+            builder: (context,AsyncSnapshot<List<Widget>> snapshot)
+            {
+              if(snapshot.connectionState!=ConnectionState.done)
+              {
+                return Lottie.asset('assets/CalendarLoading.json', fit: BoxFit.fitWidth);
+              }
+
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               mainAxisSize:MainAxisSize.max,
-              children: _generateCalendarBody(context,dayWithNote)
+              children: snapshot.data!
             );
+            });
           }
      );
   }
 } 
 
-List<Widget> _generateCalendarBody(BuildContext context , List<int> dayWithNote) 
-{
+Future<List<Widget>> _generateCalendarBody(BuildContext context) 
+async {
 
   List<Widget> bodyCalendar = <Widget>[];
   Color standardBgColor =const Color.fromARGB(118, 227, 227, 227);
   Color weekendColor = const Color.fromARGB(37, 247, 0, 0); 
   Color todayColor = const Color.fromARGB(134, 234, 238, 6); 
   Color contColor = standardBgColor;
+
+    final noteDB = context.watch<NoteDataBase>();
 
 
   DateTime today = DateTime.now();
@@ -338,10 +338,12 @@ List<Widget> _generateCalendarBody(BuildContext context , List<int> dayWithNote)
 
       giorno>maxday?giorno-=maxday:giorno;
       cellText.add(Text(giorno>0?giorno.toString():""));
-
-      if(dayWithNote.contains(giorno))
+      if (await noteDB.haveNote(DateTime(currentDate.year,currentDate.month,giorno)))
       {
-        cellText.add(Text("QUA"));
+      cellText.add(Lottie.asset(
+        'assets/CalendarLoading.json',
+        width: 50
+        ));
       }
       calendarRow.add(
         GestureDetector(
@@ -359,7 +361,7 @@ List<Widget> _generateCalendarBody(BuildContext context , List<int> dayWithNote)
                 color: contColor
               ),
               child: Row(
-                children: cellText,
+                children:[Column (children: cellText)],
                 )
             ),
             onTap:(){

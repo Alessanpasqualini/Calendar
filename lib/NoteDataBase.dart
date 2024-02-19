@@ -60,9 +60,10 @@ class NoteDataBase extends ChangeNotifier{
       await fetchNotes(note.date);
   }
 
-  Future<void> haveNote(DateTime date) async
+  Future<bool> haveNote(DateTime date) async
   {
     Note? first = await isar.notes.filter().dateEqualTo(date).findFirst();
+    return first!= null;
   }
 
   Future<void> updateDayWithNotes(DateTime date) async
@@ -80,4 +81,5 @@ class NoteDataBase extends ChangeNotifier{
  
     notifyListeners();
   }
+
 }
