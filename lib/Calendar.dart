@@ -9,7 +9,6 @@ import 'package:lottie/lottie.dart';
 
 
 DateTime currentDate = DateTime.now();
-DateTime selectedDate = DateTime.now();
 
 final StreamController<bool> _CalendarPageStreamController = StreamController<bool>();
 
@@ -271,7 +270,7 @@ class _calendarBody extends State<CalendarBody>
             {
               if(snapshot.connectionState!=ConnectionState.done)
               {
-                return Lottie.asset('assets/CalendarLoading.json', fit: BoxFit.fitWidth);
+                return const Text("");
               }
 
             return Row(
@@ -293,8 +292,7 @@ async {
   Color weekendColor = const Color.fromARGB(37, 247, 0, 0); 
   Color todayColor = const Color.fromARGB(134, 234, 238, 6); 
   Color contColor = standardBgColor;
-
-    final noteDB = context.watch<NoteDataBase>();
+  final noteDB = context.watch<NoteDataBase>();
 
 
   DateTime today = DateTime.now();
@@ -324,21 +322,30 @@ async {
 
     for (var j = 0;j<6;j++)
     {
+        int selectedMonth = currentDate.month;
       List<Widget> cellText = <Widget>[];
 
-      int giorno = 6*j+j-dayone+x;
+      int selectedDay = 6*j+j-dayone+x;
 
-      if (giorno == currentDate.day && currentDate.month == today.month && currentDate.year == today.year ) contColor = todayColor;
-      else 
+      if (selectedDay == currentDate.day && currentDate.month == today.month && currentDate.year == today.year ) 
       {
-        if (giorno > maxday) {contColor = Color.fromARGB(30, contColor.red, contColor.green, contColor.blue);}
+        contColor = todayColor;
+      } else 
+      {
+        if (selectedDay > maxday) {contColor = Color.fromARGB(30, contColor.red, contColor.green, contColor.blue);}
            else if(x == 6) {contColor = weekendColor;}
       else {contColor = standardBgColor;}
       }
+      if(selectedDay > maxday)
+      {
+        selectedDay-=maxday;
+        selectedMonth+=1;
+      }
 
-      giorno>maxday?giorno-=maxday:giorno;
-      cellText.add(Text(giorno>0?giorno.toString():""));
-      if (await noteDB.haveNote(DateTime(currentDate.year,currentDate.month,giorno)))
+      DateTime selectedDate = DateTime(currentDate.year,selectedMonth,selectedDay);
+
+      cellText.add(Text(selectedDay>0?selectedDay.toString():""));
+      if (await noteDB.haveNote(DateTime(selectedDate.year,selectedMonth,selectedDay)))
       {
       cellText.add(Lottie.asset(
         'assets/CalendarLoading.json',
@@ -365,10 +372,13 @@ async {
                 )
             ),
             onTap:(){
-              selectedDate = DateTime(selectedDate.year,selectedDate.month,giorno);
               Navigator.push(
                 context,
-              MaterialPageRoute(builder: (context) => const SingleDayCalendar())
+              PageRouteBuilder(
+                pageBuilder: (_, __, ___) => SingleDayCalendar(selectedDate: selectedDate,),
+                transitionDuration: const Duration(milliseconds: 200),
+                transitionsBuilder: (_, a, __, c) => ScaleTransition(scale: a, child: c),
+              ),
               );
             }
         )
@@ -382,10 +392,11 @@ async {
 }
 
 class SingleDayCalendar extends StatefulWidget{
-
-  const SingleDayCalendar({ super.key });
+  
+  final DateTime selectedDate;
+  const SingleDayCalendar({ super.key, required this.selectedDate });
   @override
-  State createState() => _SingleDayCalendarPage();
+  State createState() => _SingleDayCalendarPage(selectedDate: selectedDate);
 
 
 }
@@ -393,6 +404,12 @@ class SingleDayCalendar extends StatefulWidget{
 class _SingleDayCalendarPage extends State<StatefulWidget>  {
 
   final textController = TextEditingController();
+  DateTime selectedDate;
+
+  _SingleDayCalendarPage(
+    {
+      required this.selectedDate
+    });
 
 
   @override
