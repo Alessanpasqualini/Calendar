@@ -10,9 +10,9 @@ import 'package:lottie/lottie.dart';
 
 DateTime currentDate = DateTime.now();
 
-final StreamController<bool> _CalendarPageStreamController = StreamController<bool>();
-
-final StreamController<bool> _CalendarPageStreamController2 = StreamController<bool>();
+final StreamController<bool> calendarPageStreamControllerBody = StreamController<bool>();
+final StreamController<bool> calendarPageStreamControllerCalendarPage = StreamController<bool>();
+final StreamController<bool> calendarPageStreamControllerDay = StreamController<bool>();
 
 
 class Calendar extends StatefulWidget{
@@ -21,29 +21,34 @@ class Calendar extends StatefulWidget{
   @override
   State createState() => _CalendarPage();
 
-
 }
 
 class _CalendarPage extends State<StatefulWidget> {
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255,66,66,66),
-      appBar: _AppBar(),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          StreamBuilder<bool>(stream: _CalendarPageStreamController.stream,
-          builder: (context, snapshot)
-          {
-            _CalendarPageStreamController2.sink.add(true);
-             return const CalendarBody();
-          }
-          ),
-        ],
-      )
-    );
+    return  
+    StreamBuilder<bool>(stream: calendarPageStreamControllerCalendarPage.stream,
+      builder: (context, snapshot)
+      {
+        return Scaffold(
+          backgroundColor: const Color.fromARGB(255,66,66,66),
+          appBar: _AppBar(),
+          body: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            StreamBuilder<bool>(stream: calendarPageStreamControllerBody.stream,
+              builder: (context, snapshot)
+              {
+                calendarPageStreamControllerDay.sink.add(true);
+                return const CalendarBody();
+              }
+            ),
+          ],
+        )
+      );
+    });
+    
   }
 }
 
@@ -139,7 +144,7 @@ class _SelectionState extends State<Selection>
     }
     ).then((value) => {
       setState(
-        () => _CalendarPageStreamController.sink.add(true))
+        () => calendarPageStreamControllerBody.sink.add(true))
       }
     );
     },
@@ -250,7 +255,7 @@ class CalendarBody extends StatefulWidget
 
 class _calendarBody extends State<CalendarBody>
 {
-  
+  int delta=0;
    @override
   void initState()
   {
@@ -260,27 +265,40 @@ class _calendarBody extends State<CalendarBody>
   @override
   Widget build(BuildContext context) {
   
-  return StreamBuilder<bool>(stream: _CalendarPageStreamController2.stream,
-   builder: 
-   (context, snapshot)
-          {
-            return FutureBuilder(
-            future: _generateCalendarBody(context),
-            builder: (context,AsyncSnapshot<List<Widget>> snapshot)
-            {
-              if(snapshot.connectionState!=ConnectionState.done)
-              {
-                return const Text("");
-              }
+  return GestureDetector(
+    onPanEnd: (details)
+    {
+      currentDate = DateTime(currentDate.year,currentDate.month+delta,currentDate.day);
+      calendarPageStreamControllerCalendarPage.sink.add(true);
+    },
+    onPanUpdate: (details)
+    {
+      delta= details.delta.dx>0?-1:1;
+    },
 
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              mainAxisSize:MainAxisSize.max,
-              children: snapshot.data!
-            );
-            });
-          }
-     );
+    child:StreamBuilder<bool>(stream: calendarPageStreamControllerDay.stream,
+      builder: 
+      (context, snapshot)
+        {
+          return FutureBuilder(
+          future: _generateCalendarBody(context),
+          builder: (context,AsyncSnapshot<List<Widget>> snapshot)
+          {
+            if(snapshot.connectionState!=ConnectionState.done)
+            {
+              return const Text("");
+            }
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize:MainAxisSize.max,
+            children: snapshot.data!
+          );
+          });
+        }
+      ) ,
+  );
+ 
   }
 } 
 
